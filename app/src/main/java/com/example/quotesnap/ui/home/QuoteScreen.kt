@@ -1,7 +1,7 @@
 package com.example.quotesnap.ui.home
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -9,121 +9,109 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.example.quotesnap.data.model.Quote
+import com.example.quotesnap.domain.model.Quote
+import com.example.quotesnap.ui.component.LoadingAnimation
+import com.example.quotesnap.ui.component.QuoteCard
+import com.example.quotesnap.ui.component.QuoteListScreen
 import com.example.quotesnap.ui.state.UiState
-import com.example.quotesnap.ui.theme.QuoteSnapTheme
 import org.koin.androidx.compose.koinViewModel
 
 
 @Composable
 fun QuoteScreen(viewModel: QuoteViewModel = koinViewModel()) {
-    val state by viewModel.quoteState.collectAsState()
+    val allQuoteState by viewModel.quoteState.collectAsState()
+    val todayQuoteState by viewModel.todayQuoteState.collectAsState()
+    val snackBarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(Unit) {
-        viewModel.fetchRandomQuote()
-    }
-    Box(
+    Column(
         modifier = Modifier
-            .fillMaxSize(),
-        contentAlignment = Alignment.Center
+            .fillMaxSize()
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState())
     ) {
-
-        when (state) {
-            is UiState.Loading -> Text("Loading...")
-            is UiState.Success -> {
-                val quote = (state as UiState.Success<Quote>).data
-                QuoteCard(quote)
-            }
-            is UiState.Error -> Text("Error: ${(state as UiState.Error).message}")
-            is UiState.Idle -> {}
-        }
-
-    }
-}
-
-@Composable
-fun QuoteCard( quote: Quote) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
-    ) {
-        Column(
-            modifier = Modifier.padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+        Spacer(modifier = Modifier.height(16.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-
-            Spacer(modifier = Modifier.height(24.dp))
-            // Quote
-            Row(verticalAlignment = Alignment.Top) {
-                Text(
-                    text = "“",
-                    color = Color(0xFFFF6F91),
-                    fontSize = 40.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = quote.q,
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = quote.a,
-                color = Color(0xFFFF6F91),
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Medium
+                text = "Hello", style = MaterialTheme.typography.headlineSmall, color = Color.White
             )
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row {
-                    IconButton(onClick = { /* Favorite */ }) {
-                        Icon(Icons.Default.FavoriteBorder, contentDescription = "Favorite")
-
-                    }
-                    IconButton(onClick = { /* Share */ }) {
-                        Icon(Icons.Default.Share, contentDescription = "Share")
-                    }
-                }
+            IconButton(onClick = {/* handle favorite click */ }) {
+                Icon(imageVector = Icons.Default.Favorite, tint = Color.White, contentDescription = "Favorite")
             }
         }
-    }
-}
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    QuoteSnapTheme {
-        QuoteScreen()
+
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "Today Quote",
+            color = Color.White,
+            style = MaterialTheme.typography.headlineSmall
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        when (todayQuoteState) {
+            is UiState.Loading -> LoadingAnimation()
+            is UiState.Success -> {
+                val quote = (todayQuoteState as UiState.Success<Quote>).data
+                QuoteCard(quote = quote)
+                Log.i("TAG", "QuoteScreen:${quote.text} ")
+            }
+
+            is UiState.Error -> LaunchedEffect(Unit) {
+                snackBarHostState.showSnackbar((todayQuoteState as UiState.Error).message)
+                Log.i("TAG", "QuoteScreen: ${(todayQuoteState as UiState.Error).message} ")
+
+            }
+
+            is UiState.Idle -> LaunchedEffect(Unit) {
+                snackBarHostState.showSnackbar("No Internet Connection")
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "Other Quote",
+            color = Color.White,
+            style = MaterialTheme.typography.headlineSmall
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        when (allQuoteState) {
+            is UiState.Loading -> LoadingAnimation()
+            is UiState.Success -> {
+                val quotes = (allQuoteState as UiState.Success<List<Quote>>).data
+                QuoteListScreen(quotes)
+            }
+
+            is UiState.Error -> LaunchedEffect(Unit) {
+                snackBarHostState.showSnackbar((allQuoteState as UiState.Error).message)
+            }
+
+            is UiState.Idle -> LaunchedEffect(Unit) {
+                snackBarHostState.showSnackbar("No Internet Connection")
+            }
+        }
     }
 }

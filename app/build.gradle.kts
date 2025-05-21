@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("com.google.devtools.ksp")
+
 }
 
 android {
@@ -68,5 +70,36 @@ dependencies {
 // Koin
     implementation("io.insert-koin:koin-android:3.5.0")
     implementation("io.insert-koin:koin-androidx-compose:3.5.0")
+
+    //MockK
+    testImplementation("io.mockk:mockk:1.14.2")
+    testImplementation("io.mockk:mockk-agent-jvm:1.14.2")
+    androidTestImplementation("io.mockk:mockk-android:1.14.2")
+    androidTestImplementation("io.mockk:mockk-agent-android:1.14.2")
+    androidTestImplementation("io.mockk:mockk-agent-jvm:1.14.2")
+
+
+    //kotlinx-coroutines
+    testImplementation (libs.org.jetbrains.kotlinx.kotlinx.coroutines.test)
+    androidTestImplementation (libs.org.jetbrains.kotlinx.kotlinx.coroutines.test)
+    testImplementation(kotlin("test"))
+
+
+    // hamcrest
+    testImplementation (libs.hamcrest)
+    testImplementation (libs.hamcrest.library)
+    androidTestImplementation (libs.hamcrest)
+    androidTestImplementation (libs.hamcrest.library)
+
+    testImplementation (libs.robolectric)
+
+    //navigation
+    implementation(libs.androidx.compose.navigation)
+
+    //Room
+    implementation(libs.androidx.room.runtime)
+    annotationProcessor(libs.androidx.room.compiler)
+    implementation (libs.androidx.room.ktx)
+    ksp (libs.androidx.room.compiler)
 
 }

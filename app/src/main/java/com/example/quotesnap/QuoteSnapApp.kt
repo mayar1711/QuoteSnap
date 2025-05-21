@@ -1,7 +1,10 @@
 package com.example.quotesnap
 
 import android.app.Application
+import com.example.quotesnap.di.databaseModule
+import com.example.quotesnap.di.localDataSourceModule
 import com.example.quotesnap.di.networkModule
+import com.example.quotesnap.di.remoteDataSourceModule
 import com.example.quotesnap.di.repositoryModule
 import com.example.quotesnap.di.viewModelModule
 import org.koin.android.ext.koin.androidContext
@@ -16,7 +19,10 @@ class QuoteSnapApp : Application() {
                 listOf(
                     networkModule,
                     repositoryModule,
-                    viewModelModule
+                    viewModelModule,
+                    databaseModule,
+                    localDataSourceModule,
+                    remoteDataSourceModule
                 )
             )
         }
